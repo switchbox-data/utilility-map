@@ -11,58 +11,89 @@ A nation-wide map of gas and electric utility service territories
 - **Github repository**: <https://github.com/switchbox-data/utility-map/>
 - **Documentation** <https://switchbox-data.github.io/utility-map/>
 
-## Getting started with your project
+## Developing the project
 
-### 1. Create a New Repository
+To simplify development, this project uses [devcontainers](https://containers.dev/) for reproducible development environments and the [just](https://github.com/casey/just) command runner for all major tasks.
 
-First, create a repository on GitHub with the same name as this project, and then run the following commands:
-
-```bash
-git init -b main
-git add .
-git commit -m "init commit"
-git remote add origin git@github.com:switchbox-data/utility-map.git
-git push -u origin main
-```
-
-### 2. Set Up Your Development Environment
-
-Then, install the environment and the pre-commit hooks with
+Available commands are defined in [Justfile](Justile). To view available them:
 
 ```bash
-make install
+just --list
 ```
 
-This will also generate your `uv.lock` file
+### Setting up development environment
 
-### 3. Run the pre-commit hooks
+This library uses [uv](https://docs.astral.sh/uv/) for managing python versions, virtual environments, and packages.
 
-Initially, the CI/CD pipeline might be failing due to formatting issues. To resolve those run:
+However, given the presence of system dependencies, the easiest way to set up the library's develop environment is to use devcontainers. To do so, open up the repo in VSCode, or a VSCode fork like Cursor or Positron.
+
+The editor will auto-detect the presence of the repo's devcontainer (configured in [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json)). Click "Reopen in Container" to launch the devcontainer.
+
+If you prefer not to use a devcontainer, you can install uv, install the pre-commit hooks, launch the virtualenv, and download the packages (pinned in [uv.lock](uv.lock)) by running:
 
 ```bash
-uv run pre-commit run -a
+./devcontainer/postCreateCommand.sh
+just install
 ```
 
-### 4. Commit the changes
+Using a system package manager (like `brew` or `apt`), you'll also need to manually install `just` and `quarto`.
 
-Lastly, commit the changes made by the two steps above to your repository.
+### Adding a package
+To add a python package to the project:
 
 ```bash
-git add .
-git commit -m 'Fix formatting issues'
-git push origin main
+uv add <package-name>
 ```
 
-You are now ready to start development on your project!
-The CI/CD pipeline will be triggered when you open a pull request, merge to main, or when you create a new release.
+This replaces `pip install <package-name>`, and has the effect of adding the package to [pyproject.toml](pyproject.toml), as well as pinning the package version in [uv.lock](uv.lock).
 
-To finalize the set-up for publishing to PyPI, see [here](https://fpgmaas.github.io/cookiecutter-uv/features/publishing/#set-up-for-pypi).
-For activating the automatic documentation with MkDocs, see [here](https://fpgmaas.github.io/cookiecutter-uv/features/mkdocs/#enabling-the-documentation-on-github).
-To enable the code coverage reports, see [here](https://fpgmaas.github.io/cookiecutter-uv/features/codecov/).
+To add a package that will only be used as a development tool:
 
-## Releasing a new version
+```bash
+uv add --dev <package-name>
+```
 
+This will update the dev `dependency-groups` in [pyproject.toml](pyproject.toml), and ensure that the package isn't declared as a run-time dependency of the library itself.
 
+### Running code quality checks
+
+We use [ruff](https://github.com/astral-sh/ruff) for linting and code formatting, [mypy](https://mypy.readthedocs.io/en/stable/running_mypy.html) for type checking, and a series of [post-commit hooks](pre-commit-config.yaml) for validating YAML, JSON, whitespaces, and so on.
+
+To run code quality checks:
+
+```bash
+just check
+```
+
+The checks will also be run automatically by Github Actions when opening PRs, merging to main, or creating a new release.
+
+### Running tests
+
+Our test are written using `pytest` and live in [tests/](tests/). They are checked against multiple python versions using `tox`.
+
+To run the tests:
+
+```bash
+just test
+```
+
+### Rendering docs
+
+We use `mkdocs` and [mkdocs-material](https://squidfunk.github.io/mkdocs-material/) for writing and rendering docs. The docs are written in markdown and live in [docs/](docs/).
+
+To dynamically render the docs as you develop them:
+
+```bash
+just docs
+```
+
+To statically render the docs into HTML:
+
+```bash
+just docs-test
+```
+
+The docs are served by Github Pages out of the `gh-pages` branch. We do not publish them manually: they are automatically rendered and published by the Github Actions workflow when merging to `main`.
 
 ---
 
