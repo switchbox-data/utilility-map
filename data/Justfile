@@ -1,0 +1,42 @@
+# Download ENERGY STAR Public Utility Map data
+
+# Download the Public Utility Map Excel file from ENERGY STAR
+download-utility-map:
+    @echo "Downloading ENERGY STAR Public Utility Map..."
+    curl -L -o "energystar_public_utility_map_en_us.xlsx" "https://downloads.energystar.gov/bi/portfolio-manager/Public_Utility_Map_en_US.xlsx"
+    @echo "Download completed: energystar_public_utility_map_en_us.xlsx"
+
+# Download the Natural Gas Service Territories GeoJSON from HIFLD
+download-gas-territories:
+    @echo "Downloading HIFLD Natural Gas Service Territories GeoJSON..."
+    curl -L -o "hifld_natural_gas_service_territories.geojson" "https://maps.nccs.nasa.gov/mapping/rest/services/hifld_open/energy/MapServer/29/query?where=1%3D1&outFields=*&f=geojson"
+    @echo "Download completed: hifld_natural_gas_service_territories.geojson"
+
+# Download both datasets
+download-all: download-utility-map download-gas-territories
+    @echo "All downloads completed"
+
+# Clean up downloaded files
+clean:
+    @echo "Removing downloaded files..."
+    rm -f "energystar_public_utility_map_en_us.xlsx"
+    rm -f "hifld_natural_gas_service_territories.geojson"
+    @echo "Cleanup completed"
+
+# Show info about the downloaded files
+info:
+    @if [ -f "energystar_public_utility_map_en_us.xlsx" ]; then \
+        echo "File: energystar_public_utility_map_en_us.xlsx"; \
+        echo "Size: $(du -h energystar_public_utility_map_en_us.xlsx | cut -f1)"; \
+        echo "Modified: $(stat -f %Sm energystar_public_utility_map_en_us.xlsx)"; \
+        echo ""; \
+    else \
+        echo "energystar_public_utility_map_en_us.xlsx not found."; \
+    fi
+    @if [ -f "hifld_natural_gas_service_territories.geojson" ]; then \
+        echo "File: hifld_natural_gas_service_territories.geojson"; \
+        echo "Size: $(du -h hifld_natural_gas_service_territories.geojson | cut -f1)"; \
+        echo "Modified: $(stat -f %Sm hifld_natural_gas_service_territories.geojson)"; \
+    else \
+        echo "hifld_natural_gas_service_territories.geojson not found."; \
+    fi
